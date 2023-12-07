@@ -41,6 +41,7 @@ async def cmd_start(message: types.Message):
 
 
 async def download_sheet(name="commit"):
+    os.makedirs("Credentials", exist_ok=True)
     os.makedirs("ComparingSheets", exist_ok=True)
 
     creds = ServiceAccountCreds(scopes=SCOPES, **SERVICE_ACCOUNT_FILE)
