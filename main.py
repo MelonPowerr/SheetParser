@@ -83,7 +83,6 @@ async def compare():
         # Фильтрация только тех строк, которые есть во втором файле
         differences_in_second_file = differences[differences['_merge'] == 'right_only']
         # todo Раскоментить для получения заголовков
-        # print(differences_in_second_file)
 
         column_index = df2.columns.get_loc('Unnamed: 2') + 1
 
@@ -93,14 +92,17 @@ async def compare():
 
         different_tags = differences_in_second_file['Теги'].tolist()
 
+        ready_status = differences_in_second_file['Статус'] == "готов"
+
         hyperlinks_differences = extract_hyperlinks('ComparingSheets/commit.xlsx', column_index, different_indices)
         links_dif = list(hyperlinks_differences.values())
 
         updates = []
 
         # Можно добавить в табличку булевый столбик статус и высылать результаты если столбик статус чем-то заполнен
-        for index, name, link, tag in zip(different_indices, different_names, links_dif, different_tags):
-            if not pd.isna(index) and not pd.isna(name) and not pd.isna(link) and not pd.isna(tag):
+        for index, name, link, tag, ready in zip(different_indices, different_names, links_dif, different_tags,
+                                                 ready_status):
+            if not pd.isna(index) and not pd.isna(name) and not pd.isna(link) and not pd.isna(tag) and ready:
                 if index in df1['Original_Index'].tolist():
                     text = f"Обновление таблицы:\n Строка: {index}\n Название: {name}\n Ссылка: {link}\n Теги: {tag}\n"
                     print(text)
@@ -110,7 +112,7 @@ async def compare():
                     print(text)
                     updates.append(text + "\n\n")
             else:
-                print(f"Skipping incomplete entry at index {index}")
+                print(f"Что-то изменилось в строке {index}, но пока не готово")
 
         os.remove('ComparingSheets/initial.xlsx')
         os.rename('ComparingSheets/commit.xlsx', 'ComparingSheets/initial.xlsx')
