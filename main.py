@@ -3,6 +3,7 @@ from datetime import datetime
 import asyncio
 import json
 import os
+import re
 
 import openpyxl
 from aiogram import Bot, Dispatcher, types
@@ -40,11 +41,6 @@ async def cmd_start(message: types.Message):
             print(f"{str(message.chat.id)} is already in list")
 
 
-# @dp.message(Command("alive"))
-# async def test(message: types.Message):
-#     print("alive")
-
-
 async def download_sheet(name="commit"):
     os.makedirs("Credentials", exist_ok=True)
     os.makedirs("ComparingSheets", exist_ok=True)
@@ -71,11 +67,13 @@ async def compare():
     try:
         df1 = pd.read_excel('ComparingSheets/initial.xlsx')
         df1['Original_Index'] = df1.index + 2
-        df1['ССЫЛКА НА ВИДЕОАРХИВ'] = df1['ССЫЛКА НА ВИДЕОАРХИВ'].astype(str)
+        df1['Country'] = df1['Country'].astype(str)
+        df1['Unnamed: 17'] = df1['Unnamed: 17'].astype(str)
 
         df2 = pd.read_excel('ComparingSheets/commit.xlsx')
         df2['Original_Index'] = df2.index + 2
-        df2['ССЫЛКА НА ВИДЕОАРХИВ'] = df2['ССЫЛКА НА ВИДЕОАРХИВ'].astype(str)
+        df2['Country'] = df2['Country'].astype(str)
+        df2['Unnamed: 17'] = df2['Unnamed: 17'].astype(str)
 
         merged_df = pd.merge(df1, df2, how='outer', indicator=True)
         differences = merged_df[merged_df['_merge'] != 'both']
@@ -84,40 +82,70 @@ async def compare():
         differences_in_second_file = differences[differences['_merge'] == 'right_only']
         # todo Раскоментить для получения заголовков
 
-        column_index = df2.columns.get_loc('Unnamed: 2') + 1
+        indices = differences_in_second_file['Original_Index'].tolist()
 
-        different_indices = differences_in_second_file['Original_Index'].tolist()
+        disciplines = differences_in_second_file['Discipline'].tolist()
 
-        different_names = differences_in_second_file['Название видео']
+        languages = differences_in_second_file['Language'].tolist()
 
-        different_tags = differences_in_second_file['Теги'].tolist()
+        # orientations = differences_in_second_file['Orientation'].tolist()
+        #
+        # comments = differences_in_second_file['Comments'].tolist()
 
-        ready_status = differences_in_second_file['Статус'] == "готов"
+        countries = differences_in_second_file['Country'].tolist()
 
-        hyperlinks_differences = extract_hyperlinks('ComparingSheets/commit.xlsx', column_index, different_indices)
-        links_dif = list(hyperlinks_differences.values())
+        # teams = differences_in_second_file['Team (Tricode)'].tolist()
+
+        table_types = differences_in_second_file['Type'].tolist()
+
+        links = differences_in_second_file['Link'].tolist()
+
+        # durations = differences_in_second_file['Duration'].tolist()
+        #
+        # dates = differences_in_second_file['Date'].tolist()
+        #
+        # file_names = differences_in_second_file['File Name'].tolist()
+        #
+        # descriptions = differences_in_second_file['Description'].tolist()
+
+        ready_status = differences_in_second_file['Status'] == "done"
+
+        # hyperlinks_differences = extract_hyperlinks('ComparingSheets/commit.xlsx', column_index, indices)
+        # links_dif = list(hyperlinks_differences.values())
 
         updates = []
-
         # Можно добавить в табличку булевый столбик статус и высылать результаты если столбик статус чем-то заполнен
-        for index, name, link, tag, ready in zip(different_indices, different_names, links_dif, different_tags,
-                                                 ready_status):
-            if not pd.isna(index) and not pd.isna(name) and not pd.isna(link) and not pd.isna(tag) and ready:
+        for index, discipline, language, table_type, link, country, ready in zip(indices, disciplines, languages,
+                                                                                 table_types, links, countries,
+                                                                                 ready_status):
+            if (not pd.isna(index) and not pd.isna(discipline) and not pd.isna(language)
+                    and not pd.isna(table_type) and not pd.isna(link) and ready):
+                if pd.isna(country) or country == "nan":
+                    country = "N/A"
+
+                if "(" and ")" in discipline:
+                    discipline = re.findall(r'\((.*?)\)', discipline)[0]
+
                 if index in df1['Original_Index'].tolist():
-                    text = f"Обновление таблицы:\n Строка: {index}\n Название: {name}\n Ссылка: {link}\n Теги: {tag}\n"
+                    text = (f"Update:\n Line: {index}\n Discipline: {discipline}\n Country: {country}\n "
+                            f"Language: {language}\n Type: {table_type}\n Link: {link}")
                     print(text)
                     updates.append(text + "\n\n")
                 else:
-                    text = f"Обновление таблицы:\n Строка: {index}\n Название: {name}\n Ссылка: {link}\n Теги: {tag}\n"
+                    text = (f"Update:\n Line: {index}\n Discipline: {discipline}\n Country: {country}\n "
+                            f"Type: {table_type}\n Link: {link}")
                     print(text)
                     updates.append(text + "\n\n")
             else:
-                print(f"Что-то изменилось в строке {index}, но пока не готово")
+                print(f"Line {index} has changed but it's no ready yet")
 
         os.remove('ComparingSheets/initial.xlsx')
         os.rename('ComparingSheets/commit.xlsx', 'ComparingSheets/initial.xlsx')
         return updates
     except IOError:
+        await download_sheet("initial")
+    except KeyError:
+        os.remove('ComparingSheets/initial.xlsx')
         await download_sheet("initial")
     except Exception as e:
         print("Error in compare:", e)
@@ -148,6 +176,9 @@ async def procedures():
                 with open("users.txt", "r") as f:
                     while user := f.readline():
                         await bot.send_message(chat_id=user, text=text, disable_web_page_preview=True)
+        except KeyError:
+            os.remove('ComparingSheets/initial.xlsx')
+            await download_sheet("initial")
         except Exception as e:
             print("Error in procedures:", e)
         await asyncio.sleep(1)
