@@ -1,14 +1,10 @@
-import gc
 import logging
-import multiprocessing
 from datetime import datetime
 import asyncio
 import json
 import os
 import re
-from multiprocessing import pool
 
-import httpx
 import openpyxl
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
@@ -45,13 +41,6 @@ async def cmd_start(message: types.Message):
             print(f"{str(message.chat.id)} is already in list")
 
 
-@dp.message(Command("whereareyoumychild"))
-async def ip_grab(message: types.Message):
-    async with httpx.AsyncClient() as client:
-        response = await client.get("https://api.ipify.org")
-        await message.answer(response.text)
-
-
 async def download_sheet(name="commit"):
     os.makedirs("Credentials", exist_ok=True)
     os.makedirs("ComparingSheets", exist_ok=True)
@@ -62,9 +51,6 @@ async def download_sheet(name="commit"):
         gdrive = await aiog.discover('drive', 'v3')
 
         file_path = f'ComparingSheets/{name}.xlsx'
-
-        if os.path.exists(file_path):
-            os.remove(file_path)
 
         file_response = await aiog.as_service_account(
             gdrive.files.export(fileId=file_id,
@@ -77,7 +63,7 @@ async def download_sheet(name="commit"):
         print(f"[{datetime.now().strftime('%H:%M:%S')}] Synced!")
 
 
-def compare_process():
+async def compare():
     try:
         df1 = pd.read_excel('ComparingSheets/initial.xlsx')
         df1['Original_Index'] = df1.index + 2
@@ -102,15 +88,33 @@ def compare_process():
 
         languages = differences_in_second_file['Language'].tolist()
 
+        # orientations = differences_in_second_file['Orientation'].tolist()
+        #
+        # comments = differences_in_second_file['Comments'].tolist()
+
         countries = differences_in_second_file['Country'].tolist()
+
+        # teams = differences_in_second_file['Team (Tricode)'].tolist()
 
         table_types = differences_in_second_file['Type'].tolist()
 
         links = differences_in_second_file['Link'].tolist()
 
+        # durations = differences_in_second_file['Duration'].tolist()
+        #
+        # dates = differences_in_second_file['Date'].tolist()
+        #
+        # file_names = differences_in_second_file['File Name'].tolist()
+        #
+        # descriptions = differences_in_second_file['Description'].tolist()
+
         ready_status = differences_in_second_file['Status'] == "done"
 
+        # hyperlinks_differences = extract_hyperlinks('ComparingSheets/commit.xlsx', column_index, indices)
+        # links_dif = list(hyperlinks_differences.values())
+
         updates = []
+        # Можно добавить в табличку булевый столбик статус и высылать результаты если столбик статус чем-то заполнен
         for index, discipline, language, table_type, link, country, ready in zip(indices, disciplines, languages,
                                                                                  table_types, links, countries,
                                                                                  ready_status):
@@ -135,37 +139,32 @@ def compare_process():
             else:
                 print(f"Line {index} has changed but it's no ready yet")
 
-        # os.remove('ComparingSheets/initial.xlsx')
-        del df1
-        del df2
-        del merged_df
-        gc.collect()
-        if os.path.exists('ComparingSheets/initial.xlsx'):
-            os.remove('ComparingSheets/initial.xlsx')
+        os.remove('ComparingSheets/initial.xlsx')
         os.rename('ComparingSheets/commit.xlsx', 'ComparingSheets/initial.xlsx')
-
-        # Возвращаем обновления или другой результат
-        return updates  # Убедитесь, что updates определён и возвращается как результат
-    except Exception as e:
-        print("Error in compare_process:", e)
-        return []
-
-
-async def compare():
-    try:
-        pool = multiprocessing.Pool(1)
-        result = pool.apply(compare_process)
-        pool.close()
-        pool.join()
-        return result
+        return updates
+    except IOError:
+        await download_sheet("initial")
+    except KeyError:
+        os.remove('ComparingSheets/initial.xlsx')
+        await download_sheet("initial")
     except Exception as e:
         print("Error in compare:", e)
-        return []
+
+
+def extract_hyperlinks(file_path, column_index, indices):
+    workbook = openpyxl.load_workbook(file_path, data_only=False)
+    sheet = workbook.active
+    hyperlinks = {}
+
+    for index in indices:
+        cell = sheet.cell(row=index, column=column_index)
+        if cell.hyperlink:
+            hyperlinks[index] = cell.hyperlink.target
+
+    return hyperlinks
 
 
 async def procedures():
-    if not os.path.exists('ComparingSheets/initial.xlsx'):
-        await download_sheet("initial")
     while True:
         try:
             await download_sheet()
