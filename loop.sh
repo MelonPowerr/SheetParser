@@ -6,8 +6,7 @@ while true; do
 
     sleep 2m
 
-    kill $PID
-    echo 'avoiding memory leak: restarting script'
+    kill -9 $PID
 
-    sleep 20s
+    sleep 10s
 done
