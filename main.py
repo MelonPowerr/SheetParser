@@ -1,3 +1,4 @@
+import gc
 import logging
 from datetime import datetime
 import asyncio
@@ -151,6 +152,8 @@ async def compare():
                 print(f"Line {index} has changed but it's no ready yet")
 
         # os.remove('ComparingSheets/initial.xlsx')
+        del df1
+        del df2
         os.rename('ComparingSheets/commit.xlsx', 'ComparingSheets/initial.xlsx')
         return updates
     except IOError:
@@ -188,6 +191,7 @@ async def procedures():
                     while user := f.readline():
                         await bot.send_message(chat_id=user, text=text, disable_web_page_preview=True)
             await asyncio.sleep(3)
+            gc.collect()
         except KeyError:
             os.remove('ComparingSheets/initial.xlsx')
             await download_sheet("initial")
