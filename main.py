@@ -1,10 +1,12 @@
 import gc
 import logging
+import multiprocessing
 from datetime import datetime
 import asyncio
 import json
 import os
 import re
+from multiprocessing import pool
 
 import httpx
 import openpyxl
@@ -75,7 +77,7 @@ async def download_sheet(name="commit"):
         print(f"[{datetime.now().strftime('%H:%M:%S')}] Synced!")
 
 
-async def compare():
+def compare_process():
     try:
         df1 = pd.read_excel('ComparingSheets/initial.xlsx')
         df1['Original_Index'] = df1.index + 2
@@ -100,33 +102,15 @@ async def compare():
 
         languages = differences_in_second_file['Language'].tolist()
 
-        # orientations = differences_in_second_file['Orientation'].tolist()
-        #
-        # comments = differences_in_second_file['Comments'].tolist()
-
         countries = differences_in_second_file['Country'].tolist()
-
-        # teams = differences_in_second_file['Team (Tricode)'].tolist()
 
         table_types = differences_in_second_file['Type'].tolist()
 
         links = differences_in_second_file['Link'].tolist()
 
-        # durations = differences_in_second_file['Duration'].tolist()
-        #
-        # dates = differences_in_second_file['Date'].tolist()
-        #
-        # file_names = differences_in_second_file['File Name'].tolist()
-        #
-        # descriptions = differences_in_second_file['Description'].tolist()
-
         ready_status = differences_in_second_file['Status'] == "done"
 
-        # hyperlinks_differences = extract_hyperlinks('ComparingSheets/commit.xlsx', column_index, indices)
-        # links_dif = list(hyperlinks_differences.values())
-
         updates = []
-        # Можно добавить в табличку булевый столбик статус и высылать результаты если столбик статус чем-то заполнен
         for index, discipline, language, table_type, link, country, ready in zip(indices, disciplines, languages,
                                                                                  table_types, links, countries,
                                                                                  ready_status):
@@ -155,27 +139,27 @@ async def compare():
         del df1
         del df2
         gc.collect()
+        if os.path.exists('ComparingSheets/initial.xlsx'):
+            os.remove('ComparingSheets/initial.xlsx')
         os.rename('ComparingSheets/commit.xlsx', 'ComparingSheets/initial.xlsx')
-        return updates
-    except IOError:
-        await download_sheet("initial")
-    except KeyError:
-        os.remove('ComparingSheets/initial.xlsx')
-        await download_sheet("initial")
+
+        # Возвращаем обновления или другой результат
+        return updates  # Убедитесь, что updates определён и возвращается как результат
+    except Exception as e:
+        print("Error in compare_process:", e)
+        return []
+
+
+async def compare():
+    try:
+        pool = multiprocessing.Pool(1)
+        result = pool.apply(compare_process)
+        pool.close()
+        pool.join()
+        return result
     except Exception as e:
         print("Error in compare:", e)
-
-
-def extract_hyperlinks(file_path, column_index, indices):
-    workbook = openpyxl.load_workbook(file_path, data_only=False)
-    sheet = workbook.active
-    hyperlinks = {}
-
-    for index in indices:
-        cell = sheet.cell(row=index, column=column_index)
-        if cell.hyperlink:
-            hyperlinks[index] = cell.hyperlink.target
-    return hyperlinks
+        return []
 
 
 async def procedures():
@@ -190,7 +174,7 @@ async def procedures():
                 with open("users.txt", "r") as f:
                     while user := f.readline():
                         await bot.send_message(chat_id=user, text=text, disable_web_page_preview=True)
-            await asyncio.sleep(20)
+            await asyncio.sleep(3)
         except KeyError:
             os.remove('ComparingSheets/initial.xlsx')
             await download_sheet("initial")
