@@ -1,16 +1,13 @@
 #!/bin/bash
 
 while true; do
-    # Start the Python script in the background
     python3 main.py &
     PID=$!
 
-    # Wait for 30 minutes
-    sleep 30m
+    sleep 2m
 
-    # Kill the Python script
     kill $PID
+    echo 'avoiding memory leak: restarting script'
 
-    # Wait for 20 seconds
-    sleep 20s
+    sleep 10s
 done

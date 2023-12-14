@@ -88,30 +88,13 @@ async def compare():
 
         languages = differences_in_second_file['Language'].tolist()
 
-        # orientations = differences_in_second_file['Orientation'].tolist()
-        #
-        # comments = differences_in_second_file['Comments'].tolist()
-
         countries = differences_in_second_file['Country'].tolist()
-
-        # teams = differences_in_second_file['Team (Tricode)'].tolist()
 
         table_types = differences_in_second_file['Type'].tolist()
 
         links = differences_in_second_file['Link'].tolist()
 
-        # durations = differences_in_second_file['Duration'].tolist()
-        #
-        # dates = differences_in_second_file['Date'].tolist()
-        #
-        # file_names = differences_in_second_file['File Name'].tolist()
-        #
-        # descriptions = differences_in_second_file['Description'].tolist()
-
         ready_status = differences_in_second_file['Status'] == "done"
-
-        # hyperlinks_differences = extract_hyperlinks('ComparingSheets/commit.xlsx', column_index, indices)
-        # links_dif = list(hyperlinks_differences.values())
 
         updates = []
         # Можно добавить в табличку булевый столбик статус и высылать результаты если столбик статус чем-то заполнен
