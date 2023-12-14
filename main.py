@@ -138,6 +138,7 @@ def compare_process():
         # os.remove('ComparingSheets/initial.xlsx')
         del df1
         del df2
+        del merged_df
         gc.collect()
         if os.path.exists('ComparingSheets/initial.xlsx'):
             os.remove('ComparingSheets/initial.xlsx')
@@ -163,6 +164,8 @@ async def compare():
 
 
 async def procedures():
+    if not os.path.exists('ComparingSheets/initial.xlsx'):
+        await download_sheet("initial")
     while True:
         try:
             await download_sheet()
