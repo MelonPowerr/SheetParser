@@ -154,6 +154,7 @@ async def compare():
         # os.remove('ComparingSheets/initial.xlsx')
         del df1
         del df2
+        gc.collect()
         os.rename('ComparingSheets/commit.xlsx', 'ComparingSheets/initial.xlsx')
         return updates
     except IOError:
@@ -174,7 +175,6 @@ def extract_hyperlinks(file_path, column_index, indices):
         cell = sheet.cell(row=index, column=column_index)
         if cell.hyperlink:
             hyperlinks[index] = cell.hyperlink.target
-
     return hyperlinks
 
 
@@ -190,8 +190,7 @@ async def procedures():
                 with open("users.txt", "r") as f:
                     while user := f.readline():
                         await bot.send_message(chat_id=user, text=text, disable_web_page_preview=True)
-            await asyncio.sleep(3)
-            gc.collect()
+            await asyncio.sleep(20)
         except KeyError:
             os.remove('ComparingSheets/initial.xlsx')
             await download_sheet("initial")
