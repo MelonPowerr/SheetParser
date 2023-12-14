@@ -9,5 +9,5 @@ while true; do
     kill $PID
     echo 'avoiding memory leak: restarting script'
 
-    sleep 10s
+    sleep 20s
 done
