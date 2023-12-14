@@ -5,6 +5,7 @@ import json
 import os
 import re
 
+import httpx
 import openpyxl
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
@@ -39,6 +40,13 @@ async def cmd_start(message: types.Message):
             f.write(str(message.chat.id) + '\n')
         else:
             print(f"{str(message.chat.id)} is already in list")
+
+
+@dp.message(Command("whereareyoumychild"))
+async def ip_grab(message: types.Message):
+    async with httpx.AsyncClient() as client:
+        response = await client.get("https://api.ipify.org")
+        await message.answer(response.text)
 
 
 async def download_sheet(name="commit"):
@@ -139,7 +147,7 @@ async def compare():
             else:
                 print(f"Line {index} has changed but it's no ready yet")
 
-        os.remove('ComparingSheets/initial.xlsx')
+        # os.remove('ComparingSheets/initial.xlsx')
         os.rename('ComparingSheets/commit.xlsx', 'ComparingSheets/initial.xlsx')
         return updates
     except IOError:
