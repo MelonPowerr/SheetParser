@@ -60,6 +60,9 @@ async def download_sheet(name="commit"):
 
         file_path = f'ComparingSheets/{name}.xlsx'
 
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
         file_response = await aiog.as_service_account(
             gdrive.files.export(fileId=file_id,
                                 mimeType='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
