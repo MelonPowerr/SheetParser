@@ -126,6 +126,8 @@ def compare_process():
             else:
                 print(f"Line {index} has changed but it's no ready yet")
         # os.remove('ComparingSheets/initial.xlsx')
+        del differences
+        del merged_df
         del df1
         del df2
         gc.collect()
@@ -151,7 +153,7 @@ async def compare():
         return []
 
 
-@prof
+# @prof
 async def procedures():
     await discover()
     while True:
@@ -166,7 +168,7 @@ async def procedures():
                     while user := f.readline():
                         await bot.send_message(chat_id=user, text=text, disable_web_page_preview=True)
             await asyncio.sleep(3)
-            show_results(prof)
+            # show_results(prof)
         except KeyError:
             os.remove('ComparingSheets/initial.xlsx')
             await download_sheet("initial")
