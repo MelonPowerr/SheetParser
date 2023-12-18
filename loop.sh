@@ -4,7 +4,7 @@ while true; do
     python3 main.py &
     PID=$!
 
-    sleep 1m
+    sleep 2m
 
     kill -9 $PID
 

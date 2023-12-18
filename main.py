@@ -1,7 +1,7 @@
 import gc
 import logging
 import multiprocessing
-from datetime import datetime
+from datetime import datetime, timedelta
 import asyncio
 import json
 import os
@@ -57,7 +57,7 @@ async def ip_grab(message: types.Message):
         await message.answer(response.text)
 
 
-async def discover():
+async def discover_drive():
     global gdrive
     async with Aiogoogle(service_account_creds=creds) as aiog:
         gdrive = await aiog.discover('drive', 'v3')
@@ -78,7 +78,7 @@ async def download_sheet(name="commit"):
         )
         with open(file_path, 'wb') as file:
             file.write(file_response)
-        print(f"[{datetime.now().strftime('%H:%M:%S')}] Synced!")
+        print(f"[{(datetime.utcnow() + timedelta(hours=3)).strftime('%H:%M:%S')}] Synced!")
 
 
 def compare_process():
@@ -104,6 +104,7 @@ def compare_process():
         table_types = differences_in_second_file['Type'].tolist()
         links = differences_in_second_file['Link'].tolist()
         ready_status = differences_in_second_file['Status'] == "done"
+
         updates = []
         for index, discipline, language, table_type, link, country, ready in zip(indices, disciplines, languages,
                                                                                  table_types, links, countries,
@@ -156,7 +157,7 @@ async def compare():
 
 # @prof
 async def procedures():
-    await discover()
+    await discover_drive()
     if not os.path.exists("ComparingSheets/initial.xlsx"):
         await download_sheet("initial")
     while True:
