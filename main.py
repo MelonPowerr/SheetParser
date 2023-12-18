@@ -83,14 +83,15 @@ async def download_sheet(name="commit"):
 
 def compare_process():
     try:
-        df1 = pd.read_excel('ComparingSheets/initial.xlsx')
+        df1 = pd.read_excel('ComparingSheets/initial.xlsx', usecols="A:M")
+        # df1.info()
         df1['Original_Index'] = df1.index + 2
         df1['Country'] = df1['Country'].astype(str)
-        df1['Unnamed: 17'] = df1['Unnamed: 17'].astype(str)
-        df2 = pd.read_excel('ComparingSheets/commit.xlsx')
+        df2 = pd.read_excel('ComparingSheets/commit.xlsx', usecols="A:M")
+        # df2.info()
         df2['Original_Index'] = df2.index + 2
         df2['Country'] = df2['Country'].astype(str)
-        df2['Unnamed: 17'] = df2['Unnamed: 17'].astype(str)
+
         merged_df = pd.merge(df1, df2, how='outer', indicator=True)
         differences = merged_df[merged_df['_merge'] != 'both']
         # Фильтрация только тех строк, которые есть во втором файле
