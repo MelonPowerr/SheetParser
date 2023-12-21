@@ -82,11 +82,13 @@ async def download_sheet(name="commit"):
 
 def compare_process():
     try:
-        df1 = pd.read_excel('ComparingSheets/initial.xlsx', usecols="A:M", dtype={"Date": "datetime64[ns]"})
+        df1 = pd.read_excel('ComparingSheets/initial.xlsx', usecols="A:M",
+                            dtype={"Date": "str", "Country": "str", "Team (Tricode)": "str"})
         # df1.info()
         df1['Original_Index'] = df1.index + 2
         df1['Country'] = df1['Country'].astype(str)
-        df2 = pd.read_excel('ComparingSheets/commit.xlsx', usecols="A:M", dtype={"Date": "datetime64[ns]"})
+        df2 = pd.read_excel('ComparingSheets/commit.xlsx', usecols="A:M",
+                            dtype={"Date": "str", "Country": "str", "Team (Tricode)": "str"})
         # df2.info()
         df2['Original_Index'] = df2.index + 2
         df2['Country'] = df2['Country'].astype(str)
