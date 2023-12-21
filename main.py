@@ -68,7 +68,6 @@ async def download_sheet(name="commit"):
     os.makedirs("ComparingSheets", exist_ok=True)
 
     async with Aiogoogle(service_account_creds=creds) as aiog:
-
         file_path = f'ComparingSheets/{name}.xlsx'
         if os.path.exists(file_path):
             os.remove(file_path)
@@ -83,11 +82,11 @@ async def download_sheet(name="commit"):
 
 def compare_process():
     try:
-        df1 = pd.read_excel('ComparingSheets/initial.xlsx', usecols="A:M")
+        df1 = pd.read_excel('ComparingSheets/initial.xlsx', usecols="A:M", dtype={"Date": "datetime64[ns]"})
         # df1.info()
         df1['Original_Index'] = df1.index + 2
         df1['Country'] = df1['Country'].astype(str)
-        df2 = pd.read_excel('ComparingSheets/commit.xlsx', usecols="A:M")
+        df2 = pd.read_excel('ComparingSheets/commit.xlsx', usecols="A:M", dtype={"Date": "datetime64[ns]"})
         # df2.info()
         df2['Original_Index'] = df2.index + 2
         df2['Country'] = df2['Country'].astype(str)
