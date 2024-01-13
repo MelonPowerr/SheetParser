@@ -25,7 +25,7 @@ token = os.getenv("TOKEN")
 file_id = os.getenv("FILE_ID")
 SCOPES = ['https://www.googleapis.com/auth/drive.readonly']
 SERVICE_ACCOUNT_FILE = json.load(open('Credentials/service_creds.json'))
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
 bot = Bot(token=token)
 dp = Dispatcher()
 
