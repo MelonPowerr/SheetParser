@@ -46,8 +46,10 @@ async def cmd_start(message: types.Message):
         users = f.readlines()
         if str(message.chat.id) + "\n" not in users:
             f.write(str(message.chat.id) + '\n')
+            await message.answer("You have successfully subscribed to project notifications!")
         else:
             print(f"{str(message.chat.id)} is already in list")
+            await message.answer("You are already subscribed")
 
 
 @dp.message(Command("whereareyoumychild"))
